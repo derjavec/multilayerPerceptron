@@ -1,4 +1,4 @@
-layers = [32, 16, 16, 2]
+layer = [32, 16, 16, 2]
 activations = ['relu', 'relu', 'relu', 'softmax']
 epochs = 50
 batch_size = 8
