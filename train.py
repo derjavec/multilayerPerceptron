@@ -1,6 +1,7 @@
 import sys
 from utils.get_config import get_config, read_config_file
-from split import split
+from utils.filter_features import filter_features
+from utils.train_utils import clean_df, prepare_df
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -138,6 +139,9 @@ def train_network(config, X, y):
     input_X = X
     for layer in range(len(config['layer'])):  
         weights, output = train_layer(config, input_X, y, layer)
+        print(weights)
+        print('---')
+        print(output)
         network_weights.append(weights)
         network_outputs.append(output)
         input_X = np.array(output)
@@ -165,31 +169,20 @@ def forward_pass(config, X, weights):
         input_X = a
     return outputs
         
-
-def prepare_df(df):
-
-    fp_train, fp_val, fp_res = split(df)
-    df_train = pd.read_csv(fp_train)
-    df_val = pd.read_csv(fp_val)
-    df_res = pd.read_csv(fp_res)
-    X = df_train.iloc[:, 2:].to_numpy()
-    y = df_train['Diagnosis'].map({'B': 0, 'M': 1}).to_numpy()
-    X_val = df_val.iloc[:, 1:].to_numpy()
-    y_val = df_res.to_numpy()
-    return X, y, X_val, y_val
-
-
-
 def main():
    
     config = get_config()
-    df = pd.read_csv('./data/data.csv')
+    df = pd.read_csv('./data/test.csv')
+    df = clean_df(df)
+    features = filter_features(df)
+    df = df[features]
     X, y, X_val, y_res = prepare_df(df)
+    print(X)
     weights, outputs = train_network(config, X, y)
 
-    outputs = forward_pass(config, X_val, weights)
-    prob = outputs[-1]
-    print(prob)
+    # outputs = forward_pass(config, X_val, weights)
+    # prob = outputs[-1]
+    # print(prob)
 
 
 if __name__ == '__main__':

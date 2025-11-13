@@ -38,6 +38,14 @@ def replace_dict_values(base, new):
             base[k] = v
     return base
 
+
+def check_config(config):
+    layer = config['layer']
+    activations = config['activations']
+    if len(layer) != len(activations):
+        raise ValueError('Configuration Error, layer and activations should be the same length')
+
+
 def get_config():
 
     config = DEFAULT_CONFIG.copy()
@@ -62,4 +70,5 @@ def get_config():
         config = replace_dict_values(config, config_dict)
         args_dict.pop('config_file', None)
     config = replace_dict_values(config, args_dict)
+    check_config(config)
     return config
