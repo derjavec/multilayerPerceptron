@@ -72,3 +72,15 @@ def get_config():
     config = replace_dict_values(config, args_dict)
     check_config(config)
     return config
+
+    
+def get_activation_type(config, layer_idx):
+    activation_type = config["activations"][layer_idx].lower()
+    return activation_type
+
+def get_config_items(config):
+
+    alpha = config["learning_rate"]
+    epochs = config["epochs"]
+    batch_size = config["batch_size"]
+    return alpha, epochs, batch_size
