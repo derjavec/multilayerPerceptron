@@ -139,9 +139,6 @@ def train_network(config, X, y):
     input_X = X
     for layer in range(len(config['layer'])):  
         weights, output = train_layer(config, input_X, y, layer)
-        print(weights)
-        print('---')
-        print(output)
         network_weights.append(weights)
         network_outputs.append(output)
         input_X = np.array(output)
@@ -173,9 +170,8 @@ def main():
    
     config = get_config()
     df = pd.read_csv('./data/test.csv')
-    df = clean_df(df)
-    features = filter_features(df)
-    df = df[features]
+    # features = filter_features(df)
+    # df = df[features]
     X, y, X_val, y_res = prepare_df(df)
     print(X)
     weights, outputs = train_network(config, X, y)

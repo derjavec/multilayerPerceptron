@@ -4,7 +4,7 @@ import numpy as np
 from split import split, get_column_names
 
 def prepare_df(df):
-
+    df = clean_df(df)
     fp_train, fp_val, fp_res = split(df)
     df_train = pd.read_csv(fp_train)
     df_val = pd.read_csv(fp_val)
