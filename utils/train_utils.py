@@ -44,25 +44,45 @@ def get_batches(X, y, batch_size):
 
 
 def initialize_coef(x_train, neurons):
-    layer_weights = []
+    intercepts = []
+    coefs = []
     for _ in range(neurons):
         coef = np.random.randn(x_train.shape[1]) * 0.01
         intercept = np.random.randn() * 0.01
-        layer_weights.append((intercept, coef))
-    return layer_weights
+        intercepts.append(intercept)
+        coefs.append(coef)
+    return intercepts, coefs
+
+def classes_to_one_hot(y, num_classes):
+    """
+    Convierte una lista de clases en una lista de probabilidades one-hot.
+    Ej: [1,0,1] → [[0,1], [1,0], [0,1]]
+    """
+    y = np.array(y, dtype=int)
+    one_hot = np.zeros((len(y), num_classes))
+    one_hot[np.arange(len(y)), y] = 1
+    return one_hot
 
 
 def prepare_df(df):
+    df = clean_df(df)
 
     fp_train, fp_val, fp_res = split(df)
+
     df_train = pd.read_csv(fp_train)
     df_val = pd.read_csv(fp_val)
     df_res = pd.read_csv(fp_res)
-    X = df_train.drop(columns=['ID', 'Diagnosis']).to_numpy()
-    y = df_train['Diagnosis'].map({'B': 0, 'M': 1}).to_numpy()
-    X_val = df_val.iloc[:, 1:].to_numpy()
-    y_val = df_res.to_numpy()
-    return X, y, X_val, y_val
+
+    X_train = df_train.drop(columns=['ID', 'Diagnosis']).to_numpy()
+    X_val   = df_val.iloc[:, 1:].to_numpy()
+
+    y_train_raw = df_train['Diagnosis'].map({'B': 0, 'M': 1}).to_numpy()
+    y_val_raw   = df_res['Diagnosis'].map({'B': 0, 'M': 1}).to_numpy()
+
+    y_train = classes_to_one_hot(y_train_raw, num_classes=2)
+    y_val   = classes_to_one_hot(y_val_raw, num_classes=2)
+
+    return X_train, y_train, X_val, y_val
 
 def clean_df(df):
     df.columns = get_column_names()
