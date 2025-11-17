@@ -9,20 +9,28 @@ def activation(z, activation_type):
         a = np.maximum(0, z)
         da_dz = (z > 0).astype(float)
     elif activation_type == 'softmax':
-        exp_z = np.exp(z - np.max(z))
-        a = exp_z / np.sum(exp_z)
-        da_dz = 1
+        exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))
+        a = exp_z / np.sum(exp_z, axis=1, keepdims=True)
+        da_dz = None
+
     else:
         raise ValueError("Unknown activation type")
     return a, da_dz
 
 def gradient_descent(X, intercept, coef, error, da_dz, alpha):
-    d_intercept = np.mean(error * da_dz)
-    d_coef = np.mean((error * da_dz)[:, None] * X, axis=0)
+
+    if da_dz is None:
+        delta = error
+    else:
+        delta = error * da_dz
     
+    d_intercept = np.mean(delta, axis=0)
+    d_coef = (delta.T @ X) / X.shape[0]
     intercept -= alpha * d_intercept
     coef -= alpha * d_coef
+    
     return intercept, coef
+
 
 
 def scale(X: np.ndarray):
@@ -43,15 +51,25 @@ def get_batches(X, y, batch_size):
         yield X_batch, y_batch
 
 
-def initialize_coef(x_train, neurons):
+def initialize_weights(config, input_dim):
+    layer_sizes = config["layer"]
+    
     intercepts = []
     coefs = []
-    for _ in range(neurons):
-        coef = np.random.randn(x_train.shape[1]) * 0.01
-        intercept = np.random.randn() * 0.01
-        intercepts.append(intercept)
-        coefs.append(coef)
+    
+    prev_dim = input_dim
+    
+    for neurons in layer_sizes:
+        layer_intercepts = np.random.randn(neurons) * 0.01
+        layer_coefs = np.random.randn(neurons, prev_dim) * 0.01
+        
+        intercepts.append(layer_intercepts)
+        coefs.append(layer_coefs)
+        
+        prev_dim = neurons
+    
     return intercepts, coefs
+
 
 def classes_to_one_hot(y, num_classes):
     """
