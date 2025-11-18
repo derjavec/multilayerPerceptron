@@ -17,6 +17,7 @@ def predict(df, intercepts, coefs, config):
     labels = np.array(["B", "M"])
     predicted_labels = labels[y_class]
     print(predicted_labels)
+    return y_pred
 
 def main():
     """Main function to train network."""
