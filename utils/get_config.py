@@ -1,6 +1,8 @@
 import argparse
 import json
 import os
+import ast
+import numpy as np
 
 
 DEFAULT_CONFIG = {
@@ -14,21 +16,28 @@ DEFAULT_CONFIG = {
 
 def read_config_file(file_path):
     ext = os.path.splitext(file_path)[1]
+    
     if ext == '.json':
-        f = open(file_path)
-        return json.load(f)
+        with open(file_path) as f:
+            return json.load(f)
+    
     elif ext == '.txt':
         config = {}
-        f = open(file_path)
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            key, value = line.split('=')
-            key = key.strip()
-            value = value.strip()
-            config[key] = value
+        with open(file_path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                key, value = line.split('=')
+                key = key.strip()
+                value = value.strip()
+                
+                try:
+                    config[key] = ast.literal_eval(value)
+                except:
+                    config[key] = value
         return config
+    
     else:
         raise ValueError('Unknown file format, please use .json or .txt')
 
@@ -39,11 +48,40 @@ def replace_dict_values(base, new):
     return base
 
 
-def check_config(config):
+def check_config(config, y):
     layer = config['layer']
     activations = config['activations']
+
     if len(layer) != len(activations):
-        raise ValueError('Configuration Error, layer and activations should be the same length')
+        raise ValueError("Configuration Error: 'layer' and 'activations' must be the same length.")
+
+    for i, val in enumerate(layer):
+        try:
+            float(val)
+        except:
+            raise ValueError(f"Configuration Error: value in 'layer' at index {i} ('{val}') must be numeric.")
+    try:
+        float(config["epochs"])
+    except:
+        raise ValueError(f"Configuration Error: 'epochs' must be numeric. Found: {config['epochs']}")
+
+    try:
+        float(config["batch_size"])
+    except:
+        raise ValueError(f"Configuration Error: 'batch_size' must be numeric. Found: {config['batch_size']}")
+
+    try:
+        float(config["learning_rate"])
+    except:
+        raise ValueError(f"Configuration Error: 'learning_rate' must be numeric. Found: {config['learning_rate']}")
+
+    n_classes = len(np.unique(y))
+    if n_classes != int(layer[-1]):
+        raise ValueError(
+            f"Configuration Error: last layer must contain {n_classes} neurons, "
+            f"but found {layer[-1]}"
+        )
+
 
 
 def get_config():
@@ -70,17 +108,17 @@ def get_config():
         config = replace_dict_values(config, config_dict)
         args_dict.pop('config_file', None)
     config = replace_dict_values(config, args_dict)
-    check_config(config)
     return config
 
-    
-def get_activation_type(config, layer_idx):
-    activation_type = config["activations"][layer_idx].lower()
-    return activation_type
 
-def get_config_items(config):
+# def get_activation_type(config, layer_idx):
+#     activation_type = config["activations"][layer_idx].lower()
+#     return activation_type
 
-    alpha = config["learning_rate"]
-    epochs = config["epochs"]
-    batch_size = config["batch_size"]
-    return alpha, epochs, batch_size
+
+# def get_config_items(config):
+
+#     alpha = config["learning_rate"]
+#     epochs = config["epochs"]
+#     batch_size = config["batch_size"]
+#     return alpha, epochs, batch_size
