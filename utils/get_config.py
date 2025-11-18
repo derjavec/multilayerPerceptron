@@ -4,96 +4,104 @@ import os
 import ast
 import numpy as np
 
-
 DEFAULT_CONFIG = {
-    'layer': [16, 16, 2],
-    'activations': ['relu', 'relu', 'softmax'],
-    'epochs': 50,
-    'batch_size': 16,
-    'learning_rate': 0.01
+    "config_file" : './data/data.csv',
+    "layer": [32, 16, 16, 2],
+    "activations": ["relu", "relu", "relu", "softmax"],
+    "epochs": 50,
+    "batch_size": 8,
+    "learning_rate": 0.01,
 }
 
 
-def read_config_file(file_path):
-    ext = os.path.splitext(file_path)[1]
-    
-    if ext == '.json':
+def read_config_file(file_path: str) -> dict:
+    """
+    Read a configuration file in JSON or TXT format.
+    """
+    ext = os.path.splitext(file_path)[1].lower()
+
+    if ext == ".json":
         with open(file_path) as f:
             return json.load(f)
-    
-    elif ext == '.txt':
+
+    if ext == ".txt":
         config = {}
         with open(file_path) as f:
             for line in f:
                 line = line.strip()
-                if not line or line.startswith('#'):
+                if not line or line.startswith("#"):
                     continue
-                key, value = line.split('=')
+                key, value = line.split("=")
                 key = key.strip()
                 value = value.strip()
-                
                 try:
                     config[key] = ast.literal_eval(value)
-                except:
+                except Exception:
                     config[key] = value
         return config
-    
-    else:
-        raise ValueError('Unknown file format, please use .json or .txt')
 
-def replace_dict_values(base, new):
+    raise ValueError("Unknown file format. Please use .json or .txt")
+
+
+def replace_dict_values(base: dict, new: dict) -> dict:
+    """
+    Replace values in a base dictionary with values from a new dictionary.
+    """
     for k, v in new.items():
         if v is not None:
             base[k] = v
     return base
 
 
-def check_config(config, y):
-    layer = config['layer']
-    activations = config['activations']
+def check_config(config: dict, y: np.ndarray):
+    """
+    Validate network configuration.
+    """
+    layers = config["layer"]
+    activations = config["activations"]
 
-    if len(layer) != len(activations):
-        raise ValueError("Configuration Error: 'layer' and 'activations' must be the same length.")
+    if len(layers) != len(activations):
+        raise ValueError(
+            "Configuration Error: 'layer' and 'activations' must have the same length."
+        )
 
-    for i, val in enumerate(layer):
+    for i, val in enumerate(layers):
         try:
             float(val)
-        except:
-            raise ValueError(f"Configuration Error: value in 'layer' at index {i} ('{val}') must be numeric.")
-    try:
-        float(config["epochs"])
-    except:
-        raise ValueError(f"Configuration Error: 'epochs' must be numeric. Found: {config['epochs']}")
+        except Exception:
+            raise ValueError(
+                f"Configuration Error: value in 'layer' at index {i} ('{val}') must be numeric."
+            )
 
-    try:
-        float(config["batch_size"])
-    except:
-        raise ValueError(f"Configuration Error: 'batch_size' must be numeric. Found: {config['batch_size']}")
-
-    try:
-        float(config["learning_rate"])
-    except:
-        raise ValueError(f"Configuration Error: 'learning_rate' must be numeric. Found: {config['learning_rate']}")
+    for key in ["epochs", "batch_size", "learning_rate"]:
+        try:
+            float(config[key])
+        except Exception:
+            raise ValueError(
+                f"Configuration Error: '{key}' must be numeric. Found: {config[key]}"
+            )
 
     n_classes = len(np.unique(y))
-    if n_classes != int(layer[-1]):
+    if n_classes != int(layers[-1]):
         raise ValueError(
             f"Configuration Error: last layer must contain {n_classes} neurons, "
-            f"but found {layer[-1]}"
+            f"but found {layers[-1]}"
         )
 
 
-
-def get_config():
-
+def get_config() -> dict:
+    """
+    Load and parse the configuration from defaults, command-line arguments,
+    or a file.
+    """
     config = DEFAULT_CONFIG.copy()
-    
-    parser = argparse.ArgumentParser(description='Train a neural network')
+
+    parser = argparse.ArgumentParser(description="Train a neural network")
     parser.add_argument(
-        'config_file',
-        nargs='?',
+        "config_file",
+        nargs="?", 
         type=str,
-        help='Path to config JSON file (optional)'
+        help="Path to config JSON or TXT file (optional)",
     )
     parser.add_argument("--layer", nargs="+", type=int, help="Number of neurons per layer")
     parser.add_argument("--activations", nargs="+", type=str, help="Activation functions per layer")
@@ -103,22 +111,35 @@ def get_config():
 
     args = parser.parse_args()
     args_dict = vars(args)
-    if args_dict.get('config_file'):
-        config_dict = read_config_file(args_dict['config_file'])
+
+    if args_dict.get("config_file"):
+        config_dict = read_config_file(args_dict.pop("config_file"))
         config = replace_dict_values(config, config_dict)
-        args_dict.pop('config_file', None)
+
     config = replace_dict_values(config, args_dict)
     return config
 
 
-# def get_activation_type(config, layer_idx):
-#     activation_type = config["activations"][layer_idx].lower()
-#     return activation_type
+def get_model_and_dataset():
+    """
+    Load and parse the configuration from defaults, command-line arguments,
+    or a file.
+    """
+    model = 'model.pkl'
+    dataset = './data/data.csv'
 
+    parser = argparse.ArgumentParser(description="Train a neural network")
+    parser.add_argument(
+        "dataset",
+        nargs="?", 
+        type=str,
+        help="Path to dataset file (optional)",
+    )
+    parser.add_argument("--model", nargs="?", type=str, help="mlp model")
 
-# def get_config_items(config):
-
-#     alpha = config["learning_rate"]
-#     epochs = config["epochs"]
-#     batch_size = config["batch_size"]
-#     return alpha, epochs, batch_size
+    args = parser.parse_args()
+    if args.dataset:
+        dataset = args.dataset
+    if args.model:
+        model = args.model
+    return model, dataset
