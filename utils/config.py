@@ -5,7 +5,7 @@ import ast
 import numpy as np
 
 DEFAULT_CONFIG = {
-    "config_file" : './data/data.csv',
+    "dataset" : './data/data.csv',
     "layer": [32, 16, 16, 2],
     "activations": ["relu", "relu", "relu", "softmax"],
     "epochs": 50,
@@ -105,7 +105,13 @@ def get_config() -> dict:
         "config_file",
         nargs="?", 
         type=str,
-        help="Path to config JSON or TXT file (optional)",
+        help="Path to config file (optional)",
+    )
+    parser.add_argument(
+        "--dataset",
+        nargs="?", 
+        type=str,
+        help="Path to dataset (optional)",
     )
     parser.add_argument("--layer", nargs="+", type=int, help="Number of neurons per layer")
     parser.add_argument("--activations", nargs="+", type=str, help="Activation functions per layer")
@@ -134,7 +140,7 @@ def get_model_and_dataset():
 
     parser = argparse.ArgumentParser(description="Train a neural network")
     parser.add_argument(
-        "dataset",
+        "--dataset",
         nargs="?", 
         type=str,
         help="Path to dataset file (optional)",

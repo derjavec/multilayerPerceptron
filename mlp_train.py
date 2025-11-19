@@ -156,7 +156,7 @@ def main():
     Main entry point to train the multilayer perceptron.
     """
     config = get_config()
-    df = pd.read_csv(config['config_file'])
+    df = pd.read_csv(config['dataset'])
     intercepts, coefs = multilayer_perceptron(df, config)
     
     model = {
