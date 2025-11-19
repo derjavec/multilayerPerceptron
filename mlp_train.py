@@ -1,15 +1,15 @@
 import numpy as np
 import pandas as pd
 import pickle
-from utils.get_config import get_config, check_config
-from utils.train_utils import prepare_df, get_batches, scale
-from utils.train_cal import (
+from utils.config import get_config, check_config
+from utils.mlp_utils import prepare_for_training, get_batches, scale
+from utils.calculations import (
     activation,
     gradient_descent,
     initialize_weights,
     linear_regression,
 )
-from utils.train_plot import loss_plot, acc_plot
+from utils.plots import loss_plot, acc_plot
 
 
 def forward(x, config, intercepts, coefs):
@@ -92,7 +92,7 @@ def multilayer_perceptron(df, config):
     """
     Train a multi-layer perceptron using backpropagation.
     """
-    x_train, y_train, x_val, y_val = prepare_df(df)
+    x_train, y_train, x_val, y_val = prepare_for_training(df)
     check_config(config, y_train)
 
     print("X_train shape:", x_train.shape)

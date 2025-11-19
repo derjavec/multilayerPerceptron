@@ -81,6 +81,10 @@ def check_config(config: dict, y: np.ndarray):
                 f"Configuration Error: '{key}' must be numeric. Found: {config[key]}"
             )
 
+    if activations[-1].strip().lower() != 'softmax':
+        raise ValueError(
+                f"Configuration Error: last activation should be 'softmax', and it's {activations[-1].strip().lower()}"
+            )
     n_classes = len(np.unique(y))
     if n_classes != int(layers[-1]):
         raise ValueError(

@@ -42,7 +42,7 @@ def classes_to_one_hot(
     return one_hot
 
 
-def prepare_df(
+def prepare_for_training(
     df: pd.DataFrame
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -104,7 +104,10 @@ def prepare_for_prediction(df: pd.DataFrame):
     - Return X
     """
     df = clean_df(df)
-
+    y = None
+    if 'Diagnosis' in df.columns:
+        y = df['Diagnosis'].map({"B": 0, "M": 1}).to_numpy()
+        y_val = classes_to_one_hot(y, num_classes=2)
     numeric_df = df.select_dtypes(include=[np.number])
 
     if "ID" in numeric_df.columns:
@@ -112,4 +115,4 @@ def prepare_for_prediction(df: pd.DataFrame):
 
     x = numeric_df.to_numpy()
 
-    return x
+    return x, y_val

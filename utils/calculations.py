@@ -9,6 +9,9 @@ def activation(z: np.ndarray, activation_type: str):
     if activation_type == 'relu':
         a = np.maximum(0, z)
         da_dz = (z > 0).astype(float)
+    elif activation_type.lower() == "sigmoid":
+        a = 1 / (1 + np.exp(-z))
+        da_dz = a * (1 - a)
     elif activation_type == 'softmax':
         exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))
         a = exp_z / np.sum(exp_z, axis=1, keepdims=True)
@@ -57,11 +60,18 @@ def initialize_weights(config: dict, input_dim: int):
 
     intercepts = []
     coefs = []
+    activations = config['activations']
+    first_act = activations[0].strip().lower()
 
+    if first_act == 'relu':
+        scale = 2
+    else:
+        scale = 1
+    
     prev_dim = input_dim
 
     for neurons in layer_sizes:
-        layer_coefs = np.random.randn(neurons, prev_dim) * np.sqrt(2 / prev_dim)
+        layer_coefs = np.random.randn(neurons, prev_dim) * np.sqrt(scale / prev_dim)
         layer_intercepts = np.zeros(neurons)
 
         intercepts.append(layer_intercepts)
