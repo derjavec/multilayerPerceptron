@@ -1,0 +1,5 @@
+layer = [32, 16, 16, 8, 8,  2]
+activations = ['relu', 'relu', 'relu','relu', 'relu', 'softmax']
+epochs = 80
+batch_size = 12
+learning_rate = 0.01
