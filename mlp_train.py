@@ -10,6 +10,7 @@ from utils.calculations import (
     linear_regression,
 )
 from utils.plots import loss_plot, acc_plot
+from bonus.adam import init_adam_state, back_propagation_bonus
 
 
 def forward(x, config, intercepts, coefs):
@@ -110,6 +111,9 @@ def multilayer_perceptron(df, config):
     acc_list = []
     val_acc_list = []
 
+    if config['bonus']:
+        adam_state = init_adam_state(intercepts, coefs)
+
     for epoch in range(1, config["epochs"] + 1):
         for batch_x, batch_y in get_batches(
             x_train_scaled, y_train, config["batch_size"]
@@ -117,16 +121,29 @@ def multilayer_perceptron(df, config):
             z_list, a_list, da_dz_list = forward(
                 batch_x, config, intercepts, coefs
             )
-            intercepts, coefs = back_propagation(
-                batch_x,
-                batch_y,
-                z_list,
-                a_list,
-                da_dz_list,
-                intercepts,
-                coefs,
-                config,
-            )
+            if config['bonus']:
+                intercepts, coefs = back_propagation_bonus(
+                    batch_x,
+                    batch_y,
+                    z_list,
+                    a_list,
+                    da_dz_list,
+                    intercepts,
+                    coefs,
+                    config,
+                    adam_state,
+                )
+            else:
+                intercepts, coefs = back_propagation(
+                    batch_x,
+                    batch_y,
+                    z_list,
+                    a_list,
+                    da_dz_list,
+                    intercepts,
+                    coefs,
+                    config,
+                )
 
         loss, acc = loss_and_accuracy(
             x_train_scaled, y_train, intercepts, coefs, config
@@ -156,6 +173,7 @@ def main():
     Main entry point to train the multilayer perceptron.
     """
     config = get_config()
+    print(config['bonus'])
     df = pd.read_csv(config['dataset'])
     intercepts, coefs = multilayer_perceptron(df, config)
     
@@ -164,7 +182,6 @@ def main():
         "intercepts": intercepts,
         "config": config
     }
-
     with open("model.pkl", "wb") as f:
         pickle.dump(model, f)
 

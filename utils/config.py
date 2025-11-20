@@ -11,6 +11,7 @@ DEFAULT_CONFIG = {
     "epochs": 50,
     "batch_size": 8,
     "learning_rate": 0.01,
+    "bonus" : 0
 }
 
 
@@ -112,6 +113,11 @@ def get_config() -> dict:
         nargs="?", 
         type=str,
         help="Path to dataset (optional)",
+    )
+    parser.add_argument(
+        "--bonus",
+        action="store_true",
+        help="Excecute bonus (optional)",
     )
     parser.add_argument("--layer", nargs="+", type=int, help="Number of neurons per layer")
     parser.add_argument("--activations", nargs="+", type=str, help="Activation functions per layer")
