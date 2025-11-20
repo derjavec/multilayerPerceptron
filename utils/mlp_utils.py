@@ -80,7 +80,7 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
 
     """
     df = df.copy()
-    # df.columns = get_column_names()
+    df.columns = get_column_names()
 
     if "Diagnosis" not in df.columns:
         raise ValueError("Missing 'Diagnosis' column.")
