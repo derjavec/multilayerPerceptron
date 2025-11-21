@@ -124,9 +124,10 @@ def multilayer_perceptron(df, config):
                 )
         _, a_list, _ = forward(x_train_scaled, config, intercepts, coefs)
         y_pred = a_list[-1]
+
         _, a_val_list, _ = forward(x_val_scaled, config, intercepts, coefs)
         y_val_pred = a_val_list[-1]
-        history = build_history(history, epoch, y_train, y_val, config, y_pred, y_val_pred)
+        history = build_history(history, epoch, y_train, y_pred, y_val, y_val_pred, config)
 
     return intercepts, coefs
 

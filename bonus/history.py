@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from typing import Dict, Optional, List, Any
+from utils.plots import loss_plot, acc_plot, f1_plot
 
 import numpy as np
 
@@ -91,13 +92,7 @@ def append_history(history: Dict[str, Any],
         json.dump(all_histories, file, indent=4)
 
 
-def build_history(history: Optional[Dict[str, Any]],
-                  epoch: int,
-                  y_train: np.ndarray,
-                  y_val: np.ndarray,
-                  y_pred: np.ndarray,
-                  y_val_pred: np.ndarray,
-                  config: Dict[str, Any]) -> Dict[str, Any]:
+def build_history(history, epoch, y_train, y_pred, y_val, y_val_pred, config) -> Dict[str, Any]:
     """
     Update or initialize the training history.
     """
@@ -117,7 +112,6 @@ def build_history(history: Optional[Dict[str, Any]],
                 "val_f1": 0.0
             }
         }
-
     train_loss, train_acc, train_f1 = loss_acc_f1(
         y_train, y_pred
     )
@@ -174,7 +168,23 @@ def main() -> None:
     Test loading histories.
     """
     histories = load_history()
-    print(histories)
+    train_loss = []
+    val_loss = []
+    train_acc = []
+    val_acc = []
+    train_f1 = []
+    val_f1 = []
+    for h in histories:
+        train_loss.append(h['train_loss'])
+        val_loss.append(h['val_loss'])
+        train_acc.append(h['train_acc'])
+        val_acc.append(h['val_acc'])
+        train_f1.append(h['train_f1'])
+        val_f1.append(h['val_f1'])
+    loss_plot(train_loss, val_loss)
+    acc_plot(train_acc, val_acc)
+    f1_plot(train_f1, val_f1)
+
 
 
 if __name__ == "__main__":
