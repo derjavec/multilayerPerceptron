@@ -11,6 +11,7 @@ from utils.calculations import (
 )
 from utils.plots import loss_plot, acc_plot
 from bonus.adam import init_adam_state, back_propagation_bonus
+from bonus.history import build_history
 
 
 def forward(x, config, intercepts, coefs):
@@ -71,24 +72,6 @@ def back_propagation(batch_x, batch_y, z_list, a_list,
     return intercepts, coefs
 
 
-def loss_and_accuracy(x, y, intercepts, coefs, config):
-    """
-    Compute cross-entropy loss and accuracy.
-    """
-    _, a_list, _ = forward(x, config, intercepts, coefs)
-    y_pred = a_list[-1]
-
-    loss = -np.mean(
-        np.sum(y * np.log(y_pred + 1e-8), axis=1)
-    )
-
-    pred_class = np.argmax(y_pred, axis=1)
-    true_class = np.argmax(y, axis=1)
-    acc = np.mean(pred_class == true_class)
-
-    return loss, acc
-
-
 def multilayer_perceptron(df, config):
     """
     Train a multi-layer perceptron using backpropagation.
@@ -106,14 +89,9 @@ def multilayer_perceptron(df, config):
     x_train_scaled, x_min, x_max = scale(x_train)
     x_val_scaled = (x_val - x_min) / (x_max - x_min)
 
-    loss_list = []
-    val_loss_list = []
-    acc_list = []
-    val_acc_list = []
-
-    if config['bonus']:
+    if config['optimizer'] == 'adam':
         adam_state = init_adam_state(intercepts, coefs)
-
+    history = None
     for epoch in range(1, config["epochs"] + 1):
         for batch_x, batch_y in get_batches(
             x_train_scaled, y_train, config["batch_size"]
@@ -144,26 +122,11 @@ def multilayer_perceptron(df, config):
                     coefs,
                     config,
                 )
-
-        loss, acc = loss_and_accuracy(
-            x_train_scaled, y_train, intercepts, coefs, config
-        )
-        val_loss, val_acc = loss_and_accuracy(
-            x_val_scaled, y_val, intercepts, coefs, config
-        )
-
-        loss_list.append(loss)
-        val_loss_list.append(val_loss)
-        acc_list.append(acc)
-        val_acc_list.append(val_acc)
-
-        print(
-            f"Epoch {epoch}/{config['epochs']} - "
-            f"loss: {loss:.4f} - val_loss: {val_loss:.4f}"
-        )
-
-    loss_plot(loss_list, val_loss_list)
-    acc_plot(acc_list, val_acc_list)
+        _, a_list, _ = forward(x_train_scaled, config, intercepts, coefs)
+        y_pred = a_list[-1]
+        _, a_val_list, _ = forward(x_val_scaled, config, intercepts, coefs)
+        y_val_pred = a_val_list[-1]
+        history = build_history(history, epoch, y_train, y_val, config, y_pred, y_val_pred)
 
     return intercepts, coefs
 
@@ -173,7 +136,6 @@ def main():
     Main entry point to train the multilayer perceptron.
     """
     config = get_config()
-    print(config['bonus'])
     df = pd.read_csv(config['dataset'])
     intercepts, coefs = multilayer_perceptron(df, config)
     

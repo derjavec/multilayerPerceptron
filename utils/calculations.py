@@ -79,4 +79,4 @@ def initialize_weights(config: dict, input_dim: int):
 
         prev_dim = neurons
 
-    return intercepts, coefs
+    return intercepts, coefs    

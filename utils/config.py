@@ -11,7 +11,7 @@ DEFAULT_CONFIG = {
     "epochs": 50,
     "batch_size": 8,
     "learning_rate": 0.01,
-    "bonus" : 0
+    "optimizer" : 'SGD'
 }
 
 
@@ -126,6 +126,8 @@ def get_config() -> dict:
     parser.add_argument("--learning_rate", type=float, help="Learning rate")
 
     args = parser.parse_args()
+    if args.bonus:
+        config["optimizer"] = "adam"
     args_dict = vars(args)
 
     if args_dict.get("config_file"):
