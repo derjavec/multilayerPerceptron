@@ -65,31 +65,80 @@ def same_config(config1: Dict[str, Any],
     return True
 
 
+import os
+import json
+import pickle
+from datetime import datetime
+from typing import Dict, Any
+
 def append_history(history: Dict[str, Any],
                    config: Dict[str, Any],
-                   filename: str = "histories.json") -> None:
+                   model_dir: str = "models",
+                   filename: str = "histories.json") -> str:
     """
     Append training history to a JSON file if config is not duplicated.
+    Assign a new incremental ID for the history and model.
+
+    Returns
+    -------
+    str
+        The model filename (with id) if new, else empty string.
     """
     history["timestamp"] = datetime.now().isoformat()
     history["config"] = config
 
+    # Crear archivo de histories si no existe
     if not os.path.exists(filename):
-        with open(filename, "w", encoding="utf-8") as file:
-            json.dump([history], file, indent=4)
-        return
+        history["id"] = 0
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump([history], f, indent=4)
+        return save_model_if_new(history, model_dir)
 
-    with open(filename, "r", encoding="utf-8") as file:
-        all_histories = json.load(file)
+    # Leer histories existentes
+    with open(filename, "r", encoding="utf-8") as f:
+        all_histories = json.load(f)
 
+    # Chequear si hay duplicado de config
     for item in all_histories:
         if "config" in item and same_config(item["config"], config):
-            return
+            return ""  # ya existe, no guardar
+
+    # Generar nuevo ID incremental
+    existing_ids = [h.get("id", -1) for h in all_histories]
+    new_id = max(existing_ids) + 1 if existing_ids else 0
+    history["id"] = new_id
 
     all_histories.append(history)
 
-    with open(filename, "w", encoding="utf-8") as file:
-        json.dump(all_histories, file, indent=4)
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(all_histories, f, indent=4)
+
+    # Guardar modelo correspondiente
+    return save_model_if_new(history, model_dir)
+
+
+def save_model_if_new(history: Dict[str, Any], model_dir: str) -> str:
+    """
+    Save the model only if it doesn't exist yet, using the history id.
+    """
+    os.makedirs(model_dir, exist_ok=True)
+    model_filename = f"model_{history['id']:02d}.pkl"
+    model_path = os.path.join(model_dir, model_filename)
+
+    if not os.path.exists(model_path):
+        model_data = {
+            "coefs": history.get("coefs"),
+            "intercepts": history.get("intercepts"),
+            "config": history.get("config")
+        }
+        with open(model_path, "wb") as f:
+            pickle.dump(model_data, f)
+        print(f"✅ Model saved as '{model_filename}'")
+    else:
+        print(f"⚠️ Model '{model_filename}' already exists. Skipping save.")
+
+    return model_filename
+
 
 
 def build_history(history, epoch, y_train, y_pred, y_val, y_val_pred, config) -> Dict[str, Any]:
@@ -98,6 +147,7 @@ def build_history(history, epoch, y_train, y_pred, y_val, y_val_pred, config) ->
     """
     if history is None:
         history = {
+            "id" : 0,
             "epoch": [],
             "train_loss": [],
             "train_acc": [],

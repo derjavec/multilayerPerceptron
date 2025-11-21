@@ -11,24 +11,13 @@ from utils.mlp_utils import prepare_for_prediction, scale
 def predict(df, intercepts, coefs, config):
     """
     Perform predictions on a dataset using the trained MLP.
-
-    Args:
-        df (pd.DataFrame): Dataset to predict.
-        intercepts (list of np.ndarray): List of intercept vectors per layer.
-        coefs (list of np.ndarray): List of weight matrices per layer.
-        config (dict): Network configuration.
-
-    Returns:
-        np.ndarray: Array of predicted probabilities.
     """
     x, y_val = prepare_for_prediction(df)
     x_scaled, _, _ = scale(x)
 
-    # Forward pass
     _, a_list, _ = forward(x_scaled, config, intercepts, coefs)
     y_pred = a_list[-1]
 
-    # Predicted class (0 = B, 1 = M)
     pred_class = np.argmax(y_pred, axis=1)
     labels = np.array(["B", "M"])
     predicted_labels = labels[pred_class]
@@ -36,10 +25,8 @@ def predict(df, intercepts, coefs, config):
     print("Predicted classes for the dataset:")
     print(predicted_labels)
 
-    # If ground truth exists, compute loss and accuracy
     if y_val is not None:
         true_class = np.argmax(y_val, axis=1)
-        # Binary Cross-Entropy using probability of class M
         prob_M = y_pred[:, 1]
         eps = 1e-8
         loss = -np.mean(

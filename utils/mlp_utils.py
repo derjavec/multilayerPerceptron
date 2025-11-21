@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
+import os
+import pickle
 from typing import Tuple
 
 from split import split, get_column_names
-
 
 def scale(X: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """

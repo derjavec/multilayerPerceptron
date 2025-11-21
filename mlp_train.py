@@ -145,10 +145,8 @@ def main():
         "intercepts": intercepts,
         "config": config
     }
-    with open("model.pkl", "wb") as f:
-        pickle.dump(model, f)
+    # model_filename = save_model(model, model_dir="models")
 
-    print("Model saved as 'model.pkl'.")
 
 
 if __name__ == "__main__":
