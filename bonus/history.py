@@ -73,37 +73,34 @@ from typing import Dict, Any
 
 def append_history(history: Dict[str, Any],
                    config: Dict[str, Any],
+                   intercepts,
+                   coefs,
                    model_dir: str = "models",
-                   filename: str = "histories.json") -> str:
+                   filename: str = "histories.json",
+                   ) -> str:
     """
     Append training history to a JSON file if config is not duplicated.
     Assign a new incremental ID for the history and model.
-
-    Returns
-    -------
-    str
-        The model filename (with id) if new, else empty string.
     """
     history["timestamp"] = datetime.now().isoformat()
     history["config"] = config
 
-    # Crear archivo de histories si no existe
-    if not os.path.exists(filename):
+    output_folder = 'generated_files'
+    os.makedirs(output_folder, exist_ok=True)
+    path = os.path.join(output_folder, filename)
+    if not os.path.exists(path):
         history["id"] = 0
-        with open(filename, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump([history], f, indent=4)
-        return save_model_if_new(history, model_dir)
+        return save_model_if_new(history, model_dir, intercepts, coefs)
 
-    # Leer histories existentes
-    with open(filename, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
         all_histories = json.load(f)
 
-    # Chequear si hay duplicado de config
     for item in all_histories:
         if "config" in item and same_config(item["config"], config):
-            return ""  # ya existe, no guardar
+            return ""
 
-    # Generar nuevo ID incremental
     existing_ids = [h.get("id", -1) for h in all_histories]
     new_id = max(existing_ids) + 1 if existing_ids else 0
     history["id"] = new_id
@@ -113,11 +110,10 @@ def append_history(history: Dict[str, Any],
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(all_histories, f, indent=4)
 
-    # Guardar modelo correspondiente
-    return save_model_if_new(history, model_dir)
+    return save_model_if_new(history, model_dir, intercepts, coefs)
 
 
-def save_model_if_new(history: Dict[str, Any], model_dir: str) -> str:
+def save_model_if_new(history: Dict[str, Any], model_dir: str, intercepts, coefs) -> str:
     """
     Save the model only if it doesn't exist yet, using the history id.
     """
@@ -127,8 +123,8 @@ def save_model_if_new(history: Dict[str, Any], model_dir: str) -> str:
 
     if not os.path.exists(model_path):
         model_data = {
-            "coefs": history.get("coefs"),
-            "intercepts": history.get("intercepts"),
+            "coefs": coefs,
+            "intercepts": intercepts,
             "config": history.get("config")
         }
         with open(model_path, "wb") as f:
@@ -141,7 +137,7 @@ def save_model_if_new(history: Dict[str, Any], model_dir: str) -> str:
 
 
 
-def build_history(history, epoch, y_train, y_pred, y_val, y_val_pred, config) -> Dict[str, Any]:
+def build_history(history, epoch, y_train, y_pred, y_val, y_val_pred, intercepts, coefs, config) -> Dict[str, Any]:
     """
     Update or initialize the training history.
     """
@@ -197,12 +193,12 @@ def build_history(history, epoch, y_train, y_pred, y_val, y_val_pred, config) ->
         }
 
     if epoch == config["epochs"]:
-        append_history(history, config)
+        append_history(history, config, intercepts, coefs)
 
     return history
 
 
-def load_history(filename: str = "histories.json") -> List[Dict[str, Any]]:
+def load_history(filename: str = "generated_files/histories.json") -> List[Dict[str, Any]]:
     """
     Load all training histories from file.
     """

@@ -139,25 +139,42 @@ def get_config() -> dict:
 
 
 def get_model_and_dataset():
-    """
-    Load and parse the configuration from defaults, command-line arguments,
-    or a file.
-    """
-    model = 'model.pkl'
-    dataset = './data/data.csv'
-
-    parser = argparse.ArgumentParser(description="Train a neural network")
-    parser.add_argument(
-        "--dataset",
-        nargs="?", 
-        type=str,
-        help="Path to dataset file (optional)",
-    )
-    parser.add_argument("--model", nargs="?", type=str, help="mlp model")
+    parser = argparse.ArgumentParser(description="Run MLP prediction")
+    parser.add_argument("--dataset", type=str)
+    parser.add_argument("--model", type=str)
 
     args = parser.parse_args()
-    if args.dataset:
-        dataset = args.dataset
+
+    dataset = args.dataset if args.dataset else "./data/data.csv"
+
+    # MODELS
     if args.model:
-        model = args.model
-    return model, dataset
+
+        # Si es carpeta
+        if os.path.isdir(args.model):
+            models = [
+                os.path.join(args.model, f)
+                for f in os.listdir(args.model)
+                if f.startswith("model_") and f.endswith(".pkl")
+            ]
+
+        # Si es archivo
+        elif os.path.isfile(args.model):
+            models = [args.model]
+
+        else:
+            raise ValueError(f"Invalid model path: {args.model}")
+
+    else:
+        model_dir = "models"
+        if not os.path.exists(model_dir):
+            models = []
+        else:
+            models = [
+                os.path.join(model_dir, f)
+                for f in os.listdir(model_dir)
+                if f.startswith("model_") and f.endswith(".pkl")
+            ]
+
+    return models, dataset
+

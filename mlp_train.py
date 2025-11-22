@@ -127,7 +127,7 @@ def multilayer_perceptron(df, config):
 
         _, a_val_list, _ = forward(x_val_scaled, config, intercepts, coefs)
         y_val_pred = a_val_list[-1]
-        history = build_history(history, epoch, y_train, y_pred, y_val, y_val_pred, config)
+        history = build_history(history, epoch, y_train, y_pred, y_val, y_val_pred, intercepts, coefs, config)
 
     return intercepts, coefs
 
@@ -140,14 +140,6 @@ def main():
     df = pd.read_csv(config['dataset'])
     intercepts, coefs = multilayer_perceptron(df, config)
     
-    model = {
-        "coefs": coefs,
-        "intercepts": intercepts,
-        "config": config
-    }
-    # model_filename = save_model(model, model_dir="models")
-
-
 
 if __name__ == "__main__":
     main()
