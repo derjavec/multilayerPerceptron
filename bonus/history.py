@@ -61,7 +61,6 @@ def same_config(config1: Dict[str, Any],
     for key in keys_to_compare:
         if config1.get(key) != config2.get(key):
             return False
-
     return True
 
 
@@ -104,10 +103,9 @@ def append_history(history: Dict[str, Any],
     existing_ids = [h.get("id", -1) for h in all_histories]
     new_id = max(existing_ids) + 1 if existing_ids else 0
     history["id"] = new_id
-
     all_histories.append(history)
 
-    with open(filename, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(all_histories, f, indent=4)
 
     return save_model_if_new(history, model_dir, intercepts, coefs)

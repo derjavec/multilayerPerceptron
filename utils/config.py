@@ -147,10 +147,8 @@ def get_model_and_dataset():
 
     dataset = args.dataset if args.dataset else "./data/data.csv"
 
-    # MODELS
     if args.model:
 
-        # Si es carpeta
         if os.path.isdir(args.model):
             models = [
                 os.path.join(args.model, f)
@@ -158,7 +156,6 @@ def get_model_and_dataset():
                 if f.startswith("model_") and f.endswith(".pkl")
             ]
 
-        # Si es archivo
         elif os.path.isfile(args.model):
             models = [args.model]
 

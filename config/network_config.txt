@@ -1,5 +1,5 @@
 layer = [32, 16, 16, 8, 8,  2]
-activations = ['relu', 'relu', 'relu','relu', 'relu', 'softmax']
+activations = ['sigmoid', 'relu', 'relu','relu', 'relu', 'softmax']
 epochs = 60
 batch_size = 8
 learning_rate = 0.005
