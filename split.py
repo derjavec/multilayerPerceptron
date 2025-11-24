@@ -36,7 +36,8 @@ def split(
     """
     if not 0 < train_frac < 1:
         raise ValueError("train_frac must be a float between 0 and 1.")
-    # df.columns = get_column_names()
+    if df.columns.all() != get_column_names:
+        df.columns = get_column_names()
     df_shuffled = df.sample(frac=1.0, random_state=42)
     train_size = int(len(df_shuffled) * train_frac)
 

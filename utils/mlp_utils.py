@@ -4,7 +4,40 @@ import os
 import pickle
 from typing import Tuple
 
-from split import split, get_column_names
+from split import get_column_names
+
+def split(
+    df: pd.DataFrame,
+    train_frac: float = 0.8
+) -> Tuple[str, str, str]:
+    """
+    Split the dataset into train and validation sets and save them to CSV.
+    """
+    if not 0 < train_frac < 1:
+        raise ValueError("train_frac must be a float between 0 and 1.")
+   
+    df_shuffled = df.sample(frac=1.0, random_state=42)
+    train_size = int(len(df_shuffled) * train_frac)
+
+    df_train = df_shuffled.iloc[:train_size]
+    df_val = df_shuffled.iloc[train_size:]
+
+    output_folder = "generated_files"
+    os.makedirs(output_folder, exist_ok=True)
+
+    fp_train = os.path.join(output_folder, "train.csv")
+    fp_val = os.path.join(output_folder, "validate.csv")
+    fp_res = os.path.join(output_folder, "val_results.csv")
+
+    df_train.to_csv(fp_train, index=False)
+
+    val_results = df_val["Diagnosis"]
+    val_results.to_csv(fp_res, index=False)
+
+    df_val.drop(columns=["Diagnosis"]).to_csv(fp_val, index=False)
+
+    return fp_train, fp_val, fp_res
+
 
 def scale(X: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -34,7 +67,6 @@ def classes_to_one_hot(
     Convert a vector of class indices to one-hot encoding.
     """
     y = np.asarray(y, dtype=int)
-
     if y.min() < 0 or y.max() >= num_classes:
         raise ValueError("Class values out of valid range.")
 
@@ -81,6 +113,7 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
 
     """
     df = df.copy()
+
     df.columns = get_column_names()
 
     if "Diagnosis" not in df.columns:
